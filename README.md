@@ -46,6 +46,10 @@ export class AppController {
   getUserById(@Param("id") id: string) {
     return "A user profile specified by ID";
   }
+  @Get("/:id")
+  updateUserById(@Param("id") id: string, @Body() userData) {
+    return "A user profile specified by ID which has updated";
+  }
 }
 ```
 
@@ -56,6 +60,19 @@ export class AppController {
 즉,`'/:id'` 는 그 자체로는 로직안에서 파라미터로 작용할 수 없다. 오로지 다이나믹 라우팅 만을 담당한다.
 
 Restful API 를 작성하기 위해서는 Controller의 이름을 복수형으로 할 필요가 있다.
+
+request 의 body를 받는 경우에는 `@Body() reqBody : type` 의 형식으로 작성한다. NestJS에서는 JSON을 string으로 변환하거나 역변환하는 설정이 필요없다.
+
+`/serach?name=uniqueName` 과 같은 방식의 get params의 라우팅은 다음과 같다.
+
+```jsx
+@Get('/search')
+search(@Query("name"), userName : string){
+	return 'A user'
+}
+```
+
+위의 코드가 `Get('/:id')` 보다 아래에 있다면 이것은 `'/:id'` 로 인식되어 작동하지 않는다. Get과 Post가 각각 `@Query(parameter)` , `@Body()` 라는 것에 주의한다.
 
 # Service
 
