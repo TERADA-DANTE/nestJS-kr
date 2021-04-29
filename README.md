@@ -100,7 +100,20 @@ search(@Query("name"), userName : string){
 
 위의 코드가 `Get('/:id')` 보다 아래에 있다면 이것은 `'/:id'` 로 인식되어 작동하지 않는다. Get(Patch)과 Post가 각각 `@Query(parameter)` , `@Body()` 라는 것에 주의한다.
 
-## Dto
+## Express
+
+NestJS는 Express위에서 동작하고 있다. 즉, 필요에 따라 express의 request, response에 접근할 수 있다.
+
+```jsx
+@Get()
+GetUserById(@Req() request, @Res() response){}
+```
+
+그럼에도 불구하고 위와 같은 방식은 추천되지 않는다.
+
+이유는 NestJS가 fastify와 호환되는 기능을 가지고 있기 때문이다. NestJS는 express와 fastify 두 개의 Framework 위에서 동작하기 때문에, Express의 객체에 직접적으로 접근하는 것은 미래를 생각하지 않는 개발 습관이다.
+
+## DTO
 
 데이터 모델은 Entity(아래에 있음) 에서 관리한다. 그런데, Patch나 Create 메소드의 경우 body로 들어오는 데이터의 모델은 어떻게 할까?
 
