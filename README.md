@@ -36,20 +36,25 @@ sayHelloWorld() : string {
 PUT 메소드는 모든 리소스를 업데이트하기 때문에 일부 리소스를 업데이트하는 PATCH 메소드를 사용하는 것이 바람직하다.
 
 ```jsx
-@Controller("/users")
-export class AppController {
-  @Get()
-  getAll() {
-    return "All users profile";
-  }
-  @Get("/:id")
-  getUserById(@Param("id") id: string) {
-    return "A user profile specified by ID";
-  }
-  @Get("/:id")
-  updateUserById(@Param("id") id: string, @Body() userData) {
-    return "A user profile specified by ID which has updated";
-  }
+@Controller('/users')
+export class UserController{
+	// constructor는 아래 Service에서 설명
+	constructor(private readonly userService: UserService){}
+
+	@Get()
+	getUsers(){
+		return 'All users profile'
+	}
+
+	@Get('/:id')
+	getUserById(@Param('id') id: number){
+		return 'A user profile specified by ID'
+	}
+
+	@Patch('/:id')
+	updateUserById(@Param('id') id: number, @Body() userData){
+		return 'A user profile specified by ID which has updated'
+	}
 }
 ```
 
@@ -76,26 +81,28 @@ search(@Query("name"), userName : string){
 
 # Service
 
+> nest generate service
+
 Controller에서 String을 반환하여 View를 그린다면 Service는 왜 필요할까?
 
-결론적으로 Service에는 Controller가 실행하는 함수의 Logic을 작성한다.
+결론적으로 Service에는 Controller가 실행하는 함수의 Logic을 작성한다. 함수의 logic은 SRP(Single Responsibility Principle) 을 준수한다.
 
 ## 구조와 아키텍쳐
 
 NestJS의 바람 → Controller와 Business logic을 구분한다. 즉, Controller는 url을 가져오고, 함수를 실행하는 역할만 한다. 함수의 로직은 서비스로 가는 것이 바람직하다.
 
 ```jsx
-// 위 예시를 NestJS의 아키텍쳐로 변환하면
-
 // Controller
 @Get('/hello')
 sayHelloWorld(): string{
 	this.appService.sayHelloworld()
 }
 
+// 위 예시를 NestJS의 아키텍쳐로 변환하면
+
 //Service
 @Injectable
-export class AppService{
+export class UserService{
 	...
   sayHelloWorld(): string {
 		return 'Hello world'
@@ -106,3 +113,40 @@ export class AppService{
 Controller의 함수이름과 Service의 함수이름이 반드시 같아야 할 필요는 없다.
 
 따라서 데이터베이스와 통신을 하는 경우에는 Controller가 아닌 Service에 작성하는 것이 바람직하다.
+
+## Entity
+
+> user.entity.ts
+
+Service로 보내고 받는 클래스(Interface)를 작성한다. 실제 데이터베이스의 모델이다.
+
+```jsx
+export class User {
+  id: number;
+  name: string;
+  alias: string[];
+}
+```
+
+Controller의 로직을 전부 `this.UserService.메소드` 로 바꾼다는 전제하에 위의Controller, Entity와 연계해서 Service를 작성해보면,
+
+```jsx
+@Injectable()
+export class UserService{
+	private users: User[] = []
+
+	getUsers(): User[] {
+		return this.users
+	}
+
+	getUserById(id : number): User{
+		const user = this.users.find((user)=> user.id === id)
+		if(!user) throw new NotFoundException('No user found')
+		return user
+	}
+}
+```
+
+반드시 Controller 내부에 `constructor(private readonly userService: UserService){}`를 작성해야한다.
+
+흥미로운 점은 `getUserById` 에서 id에 해당하는 user가 존재하지 않을 때 nestJS 내장 기능인 `notFoundException` 을 사용할 수 있다는 것이다. delete나 patch 메소드를 사용할 때 this.getUserById를 먼저 실행시키고 `notFoundException` 을 통과하는 경우에만 정상 응답을 받을 수 있다. 에러를 던지는 경우 자동적으로 예외처리와 함께 지정한 msg도 함께 응답된다.
