@@ -86,11 +86,18 @@ search(@Query("name"), userName : string){
 DTO는 데이터 전송 객체(Data Transfer Object)로, 다음과 같다.
 
 ```jsx
-// /dto/update-user.dto.ts
-export class UpdateUserDto{
-	readonly name: string
+// /dto/create-user.dto.ts
+export class CreateUserDto{
+	readonly name : string
 	readonly age : number
 	readonly alias : string[]
+}
+
+// /dto/update-user.dto.ts
+export class UpdateUserDto{
+	readonly name? : string
+	readonly age? : number
+	readonly alias? : string[]
 }
 
 ```
@@ -98,13 +105,19 @@ export class UpdateUserDto{
 이렇게 만들어진 DTO는 Controller와 Service에서 type interface처럼 사용할 수 있다. 즉, 개발 경험(DX)이 상승한다.
 
 ```jsx
+// Controller
+@Post()
+CreateUser(@Body() CreateUserData: CreateUserDto){
+	return this.userService.createUser(createUserData)
+}
+
 @Patch('/:id')
 UpdateUserById(@Param('id') id: number, updateData: UpdateUserDto){
 	return this.userService.updateUserById(id, updateData)
 }
 ```
 
-또한 확장하여 이것을 dataValidator로 사용할 수도 있다. (유효성 검증)
+또한 확장하여 이것을 dataValidator로 사용할 수도 있다. (유효성 검증).
 
 유효성 검증 기능을 추가하기 위해서는 `pipe` 를 작성해야한다. 미들웨어같은 개념이다. 클래스를 검증하는 npm 라이브러리도 함께 설치한다.
 
@@ -119,6 +132,8 @@ async function bootstrap() {
 }
 ```
 
+ValidationPipe의 옵션({})으로 좀 더 높은 보안을 설정할 수도 있고, transform : true 옵션은 request시에 받는 parameter를 controller parameter가 정한 타입으로 변경해준다.👍
+
 이후에 DTO를 다음과 같이 작성한다.
 
 ```jsx
@@ -126,19 +141,29 @@ async function bootstrap() {
 
 import { IsString, IsNumber } from 'class-validator'
 
-export class UpdateUserDto{
+export class CreateUserDto{
 	@IsString()
 	readonly name: string
 	@IsNumber()
 	readonly age : number
-	@IsString({ each :true })
+	@IsOptional()
+	@IsString({ each : true })
 	readonly alias : string[]
 }
+
 ```
 
-개발 경험 향상과 더불어 위와 같은 Dto는 유효하지 않은 request에 대해서 적절한 client error response를 반환한다.
+개발 경험 향상과 더불어 DTO는 유효하지 않은 request에 대해서 적절한 client error response를 반환한다.
 
-ValidationPipe의 옵션({})으로 좀 더 높은 보안을 설정할 수도 있고, transform : true 옵션은 request시에 받는 parameter를 controller parameter가 정한 타입으로 변경해준다.👍
+class-validator는 이외에도 다양한 데코레이터를 지원한다.
+
+> npm install @nestjs/mapped-types
+
+Update method와 Create method의 차이는 각 field가 필수인지 아닌지 밖에 없으므로 코드의 반복을 피하기 위해서 위의 라이브러리를 설치하고, 다음과 같이 DTO를 작성할 수 있다.
+
+```jsx
+export class UpdateUserDto extends PartialType(CreateUserDto) {}
+```
 
 # Service
 
