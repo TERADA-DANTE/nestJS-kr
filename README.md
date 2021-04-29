@@ -77,7 +77,68 @@ search(@Query("name"), userName : string){
 }
 ```
 
-위의 코드가 `Get('/:id')` 보다 아래에 있다면 이것은 `'/:id'` 로 인식되어 작동하지 않는다. Get과 Post가 각각 `@Query(parameter)` , `@Body()` 라는 것에 주의한다.
+위의 코드가 `Get('/:id')` 보다 아래에 있다면 이것은 `'/:id'` 로 인식되어 작동하지 않는다. Get(Patch)과 Post가 각각 `@Query(parameter)` , `@Body()` 라는 것에 주의한다.
+
+## Dto
+
+데이터 모델은 Entity(아래에 있음) 에서 관리한다. 그런데, Patch나 Create 메소드의 경우 body로 들어오는 데이터의 모델은 어떻게 할까?
+
+DTO는 데이터 전송 객체(Data Transfer Object)로, 다음과 같다.
+
+```jsx
+// /dto/update-user.dto.ts
+export class UpdateUserDto{
+	readonly name: string
+	readonly age : number
+	readonly alias : string[]
+}
+
+```
+
+이렇게 만들어진 DTO는 Controller와 Service에서 type interface처럼 사용할 수 있다. 즉, 개발 경험(DX)이 상승한다.
+
+```jsx
+@Patch('/:id')
+UpdateUserById(@Param('id') id: number, updateData: UpdateUserDto){
+	return this.userService.updateUserById(id, updateData)
+}
+```
+
+또한 확장하여 이것을 dataValidator로 사용할 수도 있다. (유효성 검증)
+
+유효성 검증 기능을 추가하기 위해서는 `pipe` 를 작성해야한다. 미들웨어같은 개념이다. 클래스를 검증하는 npm 라이브러리도 함께 설치한다.
+
+> npm install class-validator class-transformer
+
+```jsx
+// main.ts
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.useGlobalPipes(new ValidationPipe());
+}
+```
+
+이후에 DTO를 다음과 같이 작성한다.
+
+```jsx
+// /dto/update-user.dto.ts
+
+import { IsString, IsNumber } from 'class-validator'
+
+export class UpdateUserDto{
+	@IsString()
+	readonly name: string
+	@IsNumber()
+	readonly age : number
+	@IsString({ each :true })
+	readonly alias : string[]
+}
+```
+
+개발 경험 향상과 더불어 위와 같은 Dto는 유효하지 않은 request에 대해서 적절한 client error response를 반환한다.
+
+ValidationPipe의 옵션({})으로 좀 더 높은 보안을 설정할 수도 있고, transform : true 옵션은 request시에 받는 parameter를 controller parameter가 정한 타입으로 변경해준다.👍
 
 # Service
 
@@ -121,6 +182,7 @@ Controller의 함수이름과 Service의 함수이름이 반드시 같아야 할
 Service로 보내고 받는 클래스(Interface)를 작성한다. 실제 데이터베이스의 모델이다.
 
 ```jsx
+// /entity/user.entity.ts
 export class User {
   id: number;
   name: string;
