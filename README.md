@@ -6,11 +6,32 @@
 
 # AppModule
 
+> nest generate module
+
 Module : 애플리케이션의 일부분, Django에서의 App
 
-Root module
+main.ts 가 참조하는 Root module.
 
-Ex) 인증을 담당하는 애플리케이션 → User Module
+AppModule은 AppController와 AppService 이외를 가질 수 없다. 즉 회원 등록, 열람, 수정, 삭제기능을 하는 User 모듈이 존재한다고 하면 다음과 같이 작성된다.
+
+```jsx
+main.ts < -AppModule;
+
+// app.module.ts
+@Module({
+  imports: [UserModule],
+  controllers: [AppController],
+  provider: [AppService],
+})
+// users.module.ts
+@Module({
+  controllers: [UsersController],
+  providers: [UsersService],
+})
+export class UsersModule {}
+```
+
+provider에 Service를 추가함으로써, Controller에서 Service의 import없이 타입 추가만으로 잘 작동하는 것을 알 수 있다. 이것을 Dependency Injection이라고 한다. Service에 있는 데코레이터 `@Injectable` 가 이것을 의미한다.
 
 # Controller
 
