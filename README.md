@@ -69,7 +69,7 @@ provider에 Service를 추가함으로써, Controller에서 Service의 import없
 
 express에서 router같은 존재로, url을 가져오고 함수를 실행합니다.
 
-Ex) @Get 데코레이터는 express의 get 라우터와 같은 역할
+Ex) @Get 데코레이터는 express의 get 라우터와 같은 역할입니다.
 
 ```jsx
 @Get('/hello')
@@ -84,14 +84,14 @@ sayHelloWorld() : string {
 
 여기에서 `sayHelloWorld()` 라는 메소드명은 아무런 의미도 가지지 않습니다.
 
-이외에도 `Post` , `Delete`, `Put` , `Patch` 등도 같은 방식으로 작성한다. 파라미터를 받는 방법에 대해서는 아래에서 설명한다.
+이외에도 `Post` , `Delete`, `Put` , `Patch` 등도 같은 방식으로 작성합니다.
 
 PUT 메소드는 모든 리소스를 업데이트하기 때문에 일부 리소스를 업데이트하는 PATCH 메소드를 사용하는 것이 바람직합니다.
 
 ```jsx
 @Controller('/users')
 export class UserController{
-	// constructor는 아래 Service에서 설명
+	// constructor는 아래 Provider에서 설명
 	constructor(private readonly userService: UserService){}
 
 	@Get()
@@ -111,7 +111,7 @@ export class UserController{
 }
 ```
 
-위의 경우 `@Get()` 가 `'/'` 을 라우팅합니다. 하지만 `@Controller('/users')` 는 `'/users'` 스코프를 의미하기 때문에(엔트리 포인트) 결국 `[localhost:3000/users](http://localhost:3000/foo)` 로 라우팅이 생성됩니다.
+위의 경우 `@Get()` 가 `'/'` 을 라우팅합니다. 하지만 `@Controller('/users')` 는 `'/users'` 스코프를 의미하기 때문에(엔트리 포인트) 최종적으로 `[localhost:3000/users](http://localhost:3000/foo)` 로 라우팅이 생성됩니다.
 
 ### Route parameters
 
@@ -296,9 +296,22 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {}
 
 # Provider
 
-Provider는 Nest의 기본 개념입니다. 많은 기본 Nest 클래스는 Service, repository, factory, helper 등으로 취급될 수 있습니다. Provider의 주요 아이디어는 의존성을 **주입**한다는 것입니다. 즉, 개체가 서로 다양한 관계를 맺을 수 있으며 개체의 **배선** 기능이 Nest 런타임 시스템에 위임됩니다.
+Provider는 Nest의 기본 개념입니다. 많은 기본 Nest 클래스는 Service, repository, factory, helper 등으로 취급될 수 있습니다. Provider의 주요 아이디어는 **의존성을 주입(Inject dependency)**한다는 것입니다. 즉, 객체가 서로 다양한 관계를 맺을 수 있으며 개체의 **배선(연결)** 기능이 Nest 런타임 시스템에 위임됩니다.
 
-위의 예제에는 UserController가 존재합니다. 컨트롤러에서 Logic을 전부 처리하는 것은 SOLID원칙에도 어긋나며, 아름다운 설계가 아니기 때문에 복잡한 작업(HTTP 요청을 처리하는 등)을 Provider에 위임해야합니다. Provider는 클래스 선언 앞에 `@Injectable` 데코레이터가 존재하는 클래스입니다. `@Injectable` 데코레이터는 메타 데이터를 첨부하여 이 클래스가 Provider임을 알려줍니다. 아래에서도 작성하겠지만, **주입**은 Controller 내부의 contructor에서 이루어집니다.
+위의 예제에는 UserController가 존재합니다. Controller에서 Logic을 전부 처리하는 것은 SOLID원칙에도 어긋나며, 아름다운 설계가 아니기 때문에 복잡한 작업(HTTP 요청을 처리하는 등)을 Provider에 위임해야합니다. Provider는 클래스 선언 앞에 `@Injectable` 데코레이터가 존재하는 클래스입니다. `@Injectable` 데코레이터는 메타 데이터를 첨부하여 이 클래스가 Provider임을 알려줍니다.
+
+여기에서 Controller에서 등장한 constructor, **의존성** **주입**에 대해서 설명합니다.
+
+```jsx
+// Controller
+constructor(private readonly userService: UserService){}
+```
+
+`private` 은 타입스크립트 축약표기로 위 서비스가 해당 클래스 내에서만 사용될 수 있게, `선언(declare)` 하고 `초기화(initialize)` 합니다.
+
+`readonly` 는 컨트롤러가 Service를 참조만 할 뿐 어떤 것도 변경하지 않는 다는 것을 의미합니다.
+
+이후의 Service는 일반적으로 싱글톤이며, 실제로 이미 존재하는 Service 인스턴스를 가져와(타입스크립트의 도움으로) 빠른 개발을 할 수 있게 도와줍니다.
 
 # Service
 
@@ -306,7 +319,7 @@ Provider는 Nest의 기본 개념입니다. 많은 기본 Nest 클래스는 Serv
 
 Controller에서 String을 반환하여 View를 그린다면 Service는 왜 필요할까?
 
-결론적으로 Service에는 Controller가 실행하는 함수의 Logic을 작성한다. 함수의 logic은 SRP(Single Responsibility Principle) 을 준수한다.
+Service의 목적은 Controller부터 비즈니스 로직을 구분하는데에 있다. Service에는 Controller가 실행하는 함수의 Logic을 작성한다. 함수의 logic은 SRP(Single Responsibility Principle) 을 준수한다.
 
 ## 구조와 아키텍쳐
 
