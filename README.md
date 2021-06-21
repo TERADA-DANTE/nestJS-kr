@@ -250,7 +250,7 @@ async findOne(
 }
 ```
 
-아래는 파이프로 클래스를 검증하는 방법에 대해서 입니다.
+아래는 파이프로 클래스를 검증하는 방법에 대해서입니다.
 
 클래스를 검증하는 npm 라이브러리는 다음과 같습니다.
 
@@ -268,7 +268,7 @@ async function bootstrap() {
 
 ValidationPipe의 옵션({})으로 좀 더 높은 보안을 설정할 수도 있고, transform : true 옵션은 request시에 받는 parameter를 controller parameter가 정한 타입으로 변경해줍니다.👍
 
-이후에 DTO를 다음과 같이 작성한다.
+이후에 DTO를 다음과 같이 작성합니다.
 
 ```jsx
 // /dto/update-user.dto.ts
